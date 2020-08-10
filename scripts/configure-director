@@ -1,0 +1,29 @@
+#!/bin/bash -exu
+
+terraform() {
+  local DOCKER_COMMON="--rm -u $UID -v $HOME:$HOME -e HOME -e USER=$USER -e USERNAME=$USER -i"
+  docker run $DOCKER_COMMON -w $PWD -t hashicorp/terraform:0.11.14 $@
+}
+
+authenticate_om() {
+  export OM_TARGET="https://$(terraform output -no-color ops_manager_dns | tr -d '\r')"
+  export OM_USERNAME="admin"
+  export OM_PASSWORD="$1"
+}
+
+main() {
+  local path=${1?"Path is required (e.g. terraforming-pas, terraforming-control-plane)"}
+  local password=${2?"OpsManager password is required."}
+  pushd "$PROJECT_DIR/${path}" > /dev/null
+    ENVNAME=$(terraform output -no-color pcf_resource_group_name | tr -d '\r')
+    CA_CERT=$(cat ./${ENVNAME}*.crt)
+    RAW_JSON=$(jq -e --raw-output '.modules[0].outputs | map_values(.value)' terraform.tfstate)
+    WITH_CERT=$(echo "${RAW_JSON}" | jq --arg terraformingca "${CA_CERT}" '. + {terraforming_ca_cert: $terraformingca}')
+    authenticate_om "${password}"
+    echo $OM_TARGET
+    om -k configure-authentication -dp "${OM_PASSWORD}"
+    om -k configure-director --config <(texplate execute "$PROJECT_DIR/ci/assets/template/director-config.yml" -f  <(echo "${WITH_CERT}") -o yaml)
+  popd > /dev/null
+}
+
+main "$@"
