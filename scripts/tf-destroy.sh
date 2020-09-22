@@ -5,11 +5,4 @@ terraform() {
   docker run $DOCKER_COMMON -w $PWD -t hashicorp/terraform:0.11.14 $@
 }
 
-rm terraform.tfstate*
-
-terraform init
-terraform plan -out=plan
-terraform apply plan
-
-echo Add these name servers for environment
-terraform output env_dns_zone_name_servers
+terraform destroy

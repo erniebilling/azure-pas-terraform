@@ -12,18 +12,18 @@ authenticate_om() {
 }
 
 main() {
-  local path=${1?"Path is required (e.g. terraforming-pas, terraforming-control-plane)"}
-  local password=${2?"OpsManager password is required."}
-  pushd "$PROJECT_DIR/${path}" > /dev/null
-    ENVNAME=$(terraform output -no-color pcf_resource_group_name | tr -d '\r')
-    CA_CERT=$(cat ./${ENVNAME}*.crt)
-    RAW_JSON=$(jq -e --raw-output '.modules[0].outputs | map_values(.value)' terraform.tfstate)
-    WITH_CERT=$(echo "${RAW_JSON}" | jq --arg terraformingca "${CA_CERT}" '. + {terraforming_ca_cert: $terraformingca}')
-    authenticate_om "${password}"
-    echo $OM_TARGET
-    om -k configure-authentication -dp "${OM_PASSWORD}"
-    om -k configure-director --config <(texplate execute "$PROJECT_DIR/ci/assets/template/director-config.yml" -f  <(echo "${WITH_CERT}") -o yaml)
-  popd > /dev/null
+  local password=${1?"OpsManager password is required."}
+  ENVNAME=$(terraform output -no-color pcf_resource_group_name | tr -d '\r')
+  CA_CERT=$(cat ./${ENVNAME}*.crt)
+  RAW_JSON=$(jq -e --raw-output '.modules[0].outputs | map_values(.value)' terraform.tfstate)
+  WITH_CERT=$(echo "${RAW_JSON}" | jq --arg terraformingca "${CA_CERT}" '. + {terraforming_ca_cert: $terraformingca}')
+  authenticate_om "${password}"
+  echo $OM_TARGET
+  om -k configure-authentication -dp "${OM_PASSWORD}"
+  om -k configure-director --config <(texplate execute "$PROJECT_DIR/ci/assets/template/director-config.yml" -f  <(echo "${WITH_CERT}") -o yaml)
 }
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PROJECT_DIR="${SCRIPT_DIR}/.."
 
 main "$@"

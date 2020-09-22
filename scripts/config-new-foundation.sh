@@ -26,8 +26,8 @@ client_id       = "${ARM_CLIENT_ID}"
 client_secret   = "${ARM_CLIENT_SECRET}"
 
 env_name              = "${1}"
-#ops_manager_image_uri = "https://opsmanagerwestus.blob.core.windows.net/images/ops-manager-2.9.1-build.121.vhd"
-ops_manager_image_uri = "https://opsmanagerwestus.blob.core.windows.net/images/ops-manager-2.8.8-build.266.vhd"
+ops_manager_image_uri = "https://opsmanagerwestus.blob.core.windows.net/images/ops-manager-2.9.1-build.121.vhd"
+#ops_manager_image_uri = "https://opsmanagerwestus.blob.core.windows.net/images/ops-manager-2.8.8-build.266.vhd"
 location              = "West US 2"
 dns_suffix            = "${DNS_SUFFIX}"
 
